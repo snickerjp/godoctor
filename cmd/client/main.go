@@ -16,6 +16,7 @@ func main() {
 	callTool := flag.String("tool-call", "", "Call a specific tool on the server")
 	serverPath := flag.String("server-path", "./bin/server", "Path to the server binary")
 	hint := flag.String("hint", "", "Optional hint for code_review (e.g. 'focus on security')")
+	addr := flag.String("addr", "", "Server HTTP endpoint (e.g. http://localhost:8080/mcp)")
 	flag.Parse()
 
 	if !*listTools && *callTool == "" {
@@ -25,10 +26,15 @@ func main() {
 
 	ctx := context.Background()
 
-	cmd := exec.Command(*serverPath)
-	cmd.Stderr = os.Stderr
+	var transport mcp.Transport
+	if *addr != "" {
+		transport = &mcp.StreamableClientTransport{Endpoint: *addr}
+	} else {
+		cmd := exec.Command(*serverPath)
+		cmd.Stderr = os.Stderr
+		transport = &mcp.CommandTransport{Command: cmd}
+	}
 
-	transport := &mcp.CommandTransport{Command: cmd}
 	client := mcp.NewClient(&mcp.Implementation{
 		Name:    "test-client",
 		Version: "1.0.0",
