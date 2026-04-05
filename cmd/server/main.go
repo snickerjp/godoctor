@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"godoctor/internal/tools/code"
@@ -12,8 +13,8 @@ import (
 )
 
 func main() {
-	project := flag.String("project", "", "Google Cloud Project ID")
-	location := flag.String("location", "", "Google Cloud Location")
+	project := flag.String("project", os.Getenv("GOOGLE_CLOUD_PROJECT"), "Google Cloud Project ID")
+	location := flag.String("location", os.Getenv("GOOGLE_CLOUD_LOCATION"), "Google Cloud Location")
 	useHTTP := flag.Bool("http", false, "Use Streamable HTTP transport")
 	listen := flag.String("listen", ":8080", "Address to listen on (used with -http)")
 	flag.Parse()
