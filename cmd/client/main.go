@@ -15,6 +15,7 @@ func main() {
 	listTools := flag.Bool("tools-list", false, "List available tools on the server")
 	callTool := flag.String("tool-call", "", "Call a specific tool on the server")
 	serverPath := flag.String("server-path", "./bin/server", "Path to the server binary")
+	hint := flag.String("hint", "", "Optional hint for code_review (e.g. 'focus on security')")
 	flag.Parse()
 
 	if !*listTools && *callTool == "" {
@@ -24,9 +25,7 @@ func main() {
 
 	ctx := context.Background()
 
-	// Connect to the server using CommandTransport
 	cmd := exec.Command(*serverPath)
-	// We want to see stderr from the server for debugging
 	cmd.Stderr = os.Stderr
 
 	transport := &mcp.CommandTransport{Command: cmd}
@@ -53,49 +52,9 @@ func main() {
 	}
 
 	if *callTool != "" {
-		var toolArgs map[string]any
-		if *callTool == "read_docs" {
-			args := flag.Args()
-			if len(args) == 0 {
-				log.Fatal("read_docs requires at least a package name")
-			}
-			
-			fullPath := args[0]
-			// Try to find if there's a symbol (last part after a dot, if not in a URL-like path)
-			// Actually, go doc handles it by itself if we just give the full path.
-			// But the tool expects separate package and symbol.
-			// Let's assume for now that if it has a slash, the last part after a dot is a symbol only if the dot is after the last slash.
-			
-			pkg := fullPath
-			symbol := ""
-			
-			lastSlash := -1
-			for i := len(fullPath) - 1; i >= 0; i-- {
-				if fullPath[i] == '/' {
-					lastSlash = i
-					break
-				}
-			}
-			
-			lastDot := -1
-			for i := len(fullPath) - 1; i > lastSlash; i-- {
-				if fullPath[i] == '.' {
-					lastDot = i
-					break
-				}
-			}
-			
-			if lastDot != -1 {
-				pkg = fullPath[:lastDot]
-				symbol = fullPath[lastDot+1:]
-			}
-			
-			toolArgs = map[string]any{
-				"package": pkg,
-			}
-			if symbol != "" {
-				toolArgs["symbol"] = symbol
-			}
+		toolArgs, err := buildToolArgs(*callTool, *hint, flag.Args())
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		result, err := cs.CallTool(ctx, &mcp.CallToolParams{
@@ -110,5 +69,57 @@ func main() {
 				fmt.Println(text.Text)
 			}
 		}
+	}
+}
+
+func buildToolArgs(tool, hint string, args []string) (map[string]any, error) {
+	switch tool {
+	case "read_docs":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("read_docs requires at least a package name")
+		}
+		fullPath := args[0]
+		pkg := fullPath
+		symbol := ""
+		lastSlash := -1
+		for i := len(fullPath) - 1; i >= 0; i-- {
+			if fullPath[i] == '/' {
+				lastSlash = i
+				break
+			}
+		}
+		lastDot := -1
+		for i := len(fullPath) - 1; i > lastSlash; i-- {
+			if fullPath[i] == '.' {
+				lastDot = i
+				break
+			}
+		}
+		if lastDot != -1 {
+			pkg = fullPath[:lastDot]
+			symbol = fullPath[lastDot+1:]
+		}
+		toolArgs := map[string]any{"package": pkg}
+		if symbol != "" {
+			toolArgs["symbol"] = symbol
+		}
+		return toolArgs, nil
+
+	case "code_review":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("code_review requires a file path")
+		}
+		content, err := os.ReadFile(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("reading file: %w", err)
+		}
+		toolArgs := map[string]any{"code": string(content)}
+		if hint != "" {
+			toolArgs["hint"] = hint
+		}
+		return toolArgs, nil
+
+	default:
+		return nil, nil
 	}
 }
