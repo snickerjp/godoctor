@@ -9,6 +9,8 @@ GoDoctor is a Model Context Protocol (MCP) server that provides tools for intera
 | `hello_world` | Returns a hello world message to verify the server is running |
 | `read_docs` | Invokes `go doc` to fetch documentation for any Go package or symbol |
 | `code_review` | Analyzes Go code using Gemini 2.5 Pro on Vertex AI and returns improvements in Markdown |
+| `explain_code` | Explains Go code in English or Japanese using Gemini |
+| `generate_docs` | Generates GoDoc comments for exported identifiers in Go code using Gemini |
 | `sbom_generate` | Parses `go.mod` and generates a Software Bill of Materials in Markdown |
 | `go_test` | Runs `go test` on a specified package and returns the results |
 | `go_vet` | Runs `go vet` for static analysis on a specified package |
@@ -129,6 +131,8 @@ docker compose exec app ./bin/client --tool-call read_docs fmt
     │   └── tools/         # MCP tool implementations
     │       ├── code/      # AI code review logic
     │       ├── docs/      # Documentation retrieval logic
+    │       ├── explain/   # AI code explanation
+    │       ├── gendocs/   # AI GoDoc generation
     │       ├── gotest/    # Go test runner
     │       ├── govet/     # Go vet static analysis
     │       └── sbom/      # SBOM generation
