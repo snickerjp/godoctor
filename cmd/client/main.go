@@ -111,17 +111,20 @@ func buildToolArgs(tool, hint string, args []string) (map[string]any, error) {
 		}
 		return toolArgs, nil
 
-	case "code_review":
+	case "code_review", "explain_code", "generate_docs":
 		if len(args) == 0 {
-			return nil, fmt.Errorf("code_review requires a file path")
+			return nil, fmt.Errorf("%s requires a file path", tool)
 		}
 		content, err := os.ReadFile(args[0])
 		if err != nil {
 			return nil, fmt.Errorf("reading file: %w", err)
 		}
 		toolArgs := map[string]any{"code": string(content)}
-		if hint != "" {
+		if tool == "code_review" && hint != "" {
 			toolArgs["hint"] = hint
+		}
+		if tool == "explain_code" && hint != "" {
+			toolArgs["lang"] = hint
 		}
 		return toolArgs, nil
 

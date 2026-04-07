@@ -10,6 +10,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"godoctor/internal/tools/code"
 	"godoctor/internal/tools/docs"
+	"godoctor/internal/tools/explain"
+	"godoctor/internal/tools/gendocs"
 	"godoctor/internal/tools/gotest"
 	"godoctor/internal/tools/govet"
 	"godoctor/internal/tools/sbom"
@@ -116,6 +118,36 @@ func main() {
 					},
 					IsError: true,
 				}, nil, nil
+			}
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: result},
+				},
+			}, nil, nil
+		})
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "explain_code",
+			Description: "Explains Go code in English or Japanese using Gemini.",
+		}, func(ctx context.Context, req *mcp.CallToolRequest, args explain.Args) (*mcp.CallToolResult, any, error) {
+			result, err := explain.Run(ctx, *project, *location, args)
+			if err != nil {
+				return nil, nil, err
+			}
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: result},
+				},
+			}, nil, nil
+		})
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "generate_docs",
+			Description: "Generates GoDoc comments for exported identifiers in Go code.",
+		}, func(ctx context.Context, req *mcp.CallToolRequest, args gendocs.Args) (*mcp.CallToolResult, any, error) {
+			result, err := gendocs.Run(ctx, *project, *location, args)
+			if err != nil {
+				return nil, nil, err
 			}
 			return &mcp.CallToolResult{
 				Content: []mcp.Content{
