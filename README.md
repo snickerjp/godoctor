@@ -4,13 +4,19 @@ GoDoctor is a Model Context Protocol (MCP) server that provides tools for intera
 
 ## Features
 
+| Tool | Description |
+|------|-------------|
+| `hello_world` | Returns a hello world message to verify the server is running |
+| `read_docs` | Invokes `go doc` to fetch documentation for any Go package or symbol |
+| `code_review` | Analyzes Go code using Gemini 2.5 Pro on Vertex AI and returns improvements in Markdown |
+| `sbom_generate` | Parses `go.mod` and generates a Software Bill of Materials in Markdown |
+| `go_test` | Runs `go test` on a specified package and returns the results |
+| `go_vet` | Runs `go vet` for static analysis on a specified package |
+
+Additional features:
+
 - **Model Context Protocol (MCP) Support:** Implements the official Go MCP SDK for seamless integration with MCP clients.
-- **Documentation Retrieval:** A `read_docs` tool that invokes `go doc` to fetch documentation for any Go package or symbol.
-- **AI Code Review:** A `code_review` tool that analyzes Go code using Gemini 2.5 Pro on Vertex AI and returns improvements in Markdown.
-- **SBOM Generation:** A `sbom_generate` tool that parses `go.mod` and generates a Software Bill of Materials in Markdown.
-- **Go Test Runner:** A `go_test` tool that runs `go test` on a specified package and returns the results.
-- **Go Vet:** A `go_vet` tool that runs `go vet` for static analysis on a specified package.
-- **Hello World Tool:** A simple `hello_world` tool to verify the server is running correctly.
+- **Streamable HTTP Transport:** Supports both stdio and HTTP transport for Cloud Run deployment.
 - **CLI Client:** A dedicated test client for listing and calling tools from the command line.
 - **Dockerized Environment:** Fully containerized development and execution environment.
 
