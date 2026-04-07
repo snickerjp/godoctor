@@ -10,6 +10,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"godoctor/internal/tools/code"
 	"godoctor/internal/tools/docs"
+	"godoctor/internal/tools/gotest"
+	"godoctor/internal/tools/govet"
+	"godoctor/internal/tools/sbom"
 )
 
 func main() {
@@ -58,6 +61,61 @@ func main() {
 			result, err := code.Review(ctx, *project, *location, args)
 			if err != nil {
 				return nil, nil, err
+			}
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: result},
+				},
+			}, nil, nil
+		})
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "sbom_generate",
+			Description: "Generates a Software Bill of Materials from go.mod content.",
+		}, func(ctx context.Context, req *mcp.CallToolRequest, args sbom.Args) (*mcp.CallToolResult, any, error) {
+			result, err := sbom.Generate(args)
+			if err != nil {
+				return nil, nil, err
+			}
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: result},
+				},
+			}, nil, nil
+		})
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "go_test",
+			Description: "Runs go test on a specified package and returns the results.",
+		}, func(ctx context.Context, req *mcp.CallToolRequest, args gotest.Args) (*mcp.CallToolResult, any, error) {
+			result, err := gotest.Run(args)
+			if err != nil {
+				return &mcp.CallToolResult{
+					Content: []mcp.Content{
+						&mcp.TextContent{Text: result},
+					},
+					IsError: true,
+				}, nil, nil
+			}
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: result},
+				},
+			}, nil, nil
+		})
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "go_vet",
+			Description: "Runs go vet on a specified package and reports code issues.",
+		}, func(ctx context.Context, req *mcp.CallToolRequest, args govet.Args) (*mcp.CallToolResult, any, error) {
+			result, err := govet.Run(args)
+			if err != nil {
+				return &mcp.CallToolResult{
+					Content: []mcp.Content{
+						&mcp.TextContent{Text: result},
+					},
+					IsError: true,
+				}, nil, nil
 			}
 			return &mcp.CallToolResult{
 				Content: []mcp.Content{

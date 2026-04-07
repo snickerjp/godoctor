@@ -125,6 +125,28 @@ func buildToolArgs(tool, hint string, args []string) (map[string]any, error) {
 		}
 		return toolArgs, nil
 
+	case "sbom_generate":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("sbom_generate requires a go.mod file path")
+		}
+		content, err := os.ReadFile(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("reading file: %w", err)
+		}
+		return map[string]any{"gomod": string(content)}, nil
+
+	case "go_test":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("go_test requires a package path")
+		}
+		return map[string]any{"package": args[0]}, nil
+
+	case "go_vet":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("go_vet requires a package path")
+		}
+		return map[string]any{"package": args[0]}, nil
+
 	default:
 		return nil, nil
 	}
