@@ -7,6 +7,9 @@ GoDoctor is a Model Context Protocol (MCP) server that provides tools for intera
 - **Model Context Protocol (MCP) Support:** Implements the official Go MCP SDK for seamless integration with MCP clients.
 - **Documentation Retrieval:** A `read_docs` tool that invokes `go doc` to fetch documentation for any Go package or symbol.
 - **AI Code Review:** A `code_review` tool that analyzes Go code using Gemini 2.5 Pro on Vertex AI and returns improvements in Markdown.
+- **SBOM Generation:** A `sbom_generate` tool that parses `go.mod` and generates a Software Bill of Materials in Markdown.
+- **Go Test Runner:** A `go_test` tool that runs `go test` on a specified package and returns the results.
+- **Go Vet:** A `go_vet` tool that runs `go vet` for static analysis on a specified package.
 - **Hello World Tool:** A simple `hello_world` tool to verify the server is running correctly.
 - **CLI Client:** A dedicated test client for listing and calling tools from the command line.
 - **Dockerized Environment:** Fully containerized development and execution environment.
@@ -84,6 +87,21 @@ docker compose exec app ./bin/client --tool-call read_docs fmt
 ./bin/client --tool-call code_review --hint "focus on security" internal/tools/code/review.go
 ```
 
+#### Generate SBOM from go.mod
+```bash
+./bin/client --tool-call sbom_generate go.mod
+```
+
+#### Run Tests on a Package
+```bash
+./bin/client --tool-call go_test ./internal/tools/...
+```
+
+#### Run Static Analysis on a Package
+```bash
+./bin/client --tool-call go_vet ./cmd/server/...
+```
+
 > **Note:** The `code_review` tool requires the server to be started with `--project` and `--location` flags for Vertex AI authentication. See the server configuration below.
 
 ---
@@ -104,7 +122,10 @@ docker compose exec app ./bin/client --tool-call read_docs fmt
     ├── internal/          # Internal packages
     │   └── tools/         # MCP tool implementations
     │       ├── code/      # AI code review logic
-    │       └── docs/      # Documentation retrieval logic
+    │       ├── docs/      # Documentation retrieval logic
+    │       ├── gotest/    # Go test runner
+    │       ├── govet/     # Go vet static analysis
+    │       └── sbom/      # SBOM generation
     ├── go.mod             # Go module definition
     └── GEMINI.md          # Development guidelines
 ```
@@ -139,8 +160,10 @@ CGO_ENABLED=0 go build -o bin/client ./cmd/client/
 
 | Flag | Description |
 |------|-------------|
-| `--project` | Google Cloud Project ID (required for `code_review`) |
-| `--location` | Google Cloud Location, e.g. `us-central1` (required for `code_review`) |
+| `--project` | Google Cloud Project ID (required for `code_review`). Defaults to `GOOGLE_CLOUD_PROJECT` env var |
+| `--location` | Google Cloud Location (required for `code_review`). Defaults to `GOOGLE_CLOUD_LOCATION` env var |
+| `-http` | Use Streamable HTTP transport instead of stdio |
+| `-listen` | Address to listen on with `-http` (default: `:8080`) |
 
 ### Client Flags
 
@@ -150,6 +173,7 @@ CGO_ENABLED=0 go build -o bin/client ./cmd/client/
 | `--tool-call` | Call a specific tool |
 | `--hint` | Optional hint for `code_review` (e.g. `"focus on security"`) |
 | `--server-path` | Path to the server binary (default: `./bin/server`) |
+| `-addr` | Server HTTP endpoint (e.g. `http://localhost:8080/mcp`) |
 
 ### Adding a New Tool
 
