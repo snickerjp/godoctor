@@ -28,7 +28,7 @@ func main() {
 
 	var transport mcp.Transport
 	if *addr != "" {
-		transport = &mcp.StreamableClientTransport{Endpoint: *addr}
+		transport = &mcp.StreamableClientTransport{Endpoint: *addr, DisableStandaloneSSE: true}
 	} else {
 		cmd := exec.Command(*serverPath)
 		cmd.Stderr = os.Stderr
